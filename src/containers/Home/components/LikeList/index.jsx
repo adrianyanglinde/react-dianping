@@ -72,16 +72,37 @@ class LikeList extends Component {
     loadTimes : 1
   };
   myRef = React.createRef();
-
+  isRemoveScrollListener = false;
+  
   componentDidMount(){
     document.addEventListener("scroll",this.handleScroll);
   }
   componentWillMount(){
-    document.removeEventListener("scroll",this.handleScroll);
+    if(!this.isRemoveScrollListener){
+      document.removeEventListener("scroll",this.handleScroll);
+      this.isRemoveScrollListener = true;
+    }
   }
   handleScroll = () => {
-    console.log(this.myRef);
-    
+    if((this.state.loadTimes >= 3) && this.isRemoveScrollListener){
+      document.removeEventListener("scroll",this.handleScroll);
+      this.isRemoveScrollListener = true;
+      return false;
+    }
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const screenHeight = document.body.clientHeight;
+    const likeListTop = this.myRef.current.offsetTop;
+    const likeListHeight = this.myRef.current.offsetHeight;
+    if((scrollTop + screenHeight) >= (likeListTop + likeListHeight)){
+      const newData = this.state.data.concat(dataSource);
+      const newLoadTimes = this.state.loadTimes + 1;
+      setTimeout(() => {
+        this.setState({
+          data : newData,
+          loadTimes : newLoadTimes
+        })
+      }, 2000)
+    }
   }
   render() {
     const {data,loadTimes} = this.state;
@@ -91,11 +112,11 @@ class LikeList extends Component {
         <div className="likeList__list">
           {
             data.map((item, index) => {
-              return <LikeItem key={item.id} data={item}/>
+              return <LikeItem key={index} data={item}/>
             })
           }
           {
-            loadTimes <= 3 ? 
+            loadTimes < 3 ? 
             <Loading></Loading>
             :
             <a className="likeList__viewAll">
