@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { actions } from '../../redux/modules/home'
-
 import Category from './components/Category'
 import Headline from './components/Headline'
 import Discount from './components/Discount'
@@ -14,13 +12,20 @@ import Activity from './components/Activity'
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+import { 
+  actions,
+  getProductsLikes,
+  getProductsDiscounts,
+  getProductsLikesPage,
+  getProductsLikesLoading
+} from '../../redux/modules/home'
 
 export class Home extends Component {
   componentDidMount(){
-    this.props.laodProcutLikes(1,10);
+    //this.props.laodProcutLikes();
+    this.props.loadProcutDiscounts();
   }
   render() {
-    let {loading,likes,errorText} = this.props;
     return (
       <div>
         <HomeHeader/>
@@ -28,8 +33,15 @@ export class Home extends Component {
         <Category/>
         <Headline/>
         <Activity/>
-        <Discount/>
-        <LikeList/>
+        <Discount 
+          data={this.props.discounts}
+        />
+        <LikeList 
+          page={this.props.page}
+          data={this.props.likes}
+          loading={this.props.likesLoding}
+          fetchData={this.props.laodProcutLikes}
+        />
         <Footer/>
         {/* {loading ? "loading" : (errorText ? errorText : JSON.stringify(likes))} */}
       </div>
@@ -38,16 +50,21 @@ export class Home extends Component {
 }
 
 const mapStateToProps = (state) => ({
-  likes : state.entities.products.keys,
-  errorText : state.home.errorText,
-  loading : state.home.loading,
+  likes : getProductsLikes(state),
+  likesLoding : getProductsLikesLoading(state),
+  page : getProductsLikesPage(state),
+  discounts : getProductsDiscounts(state),
 })
 
 const mapDispatchToProps = (dispatch) => ({
-  laodProcutLikes : (start,end) => dispatch(actions.loadProcutLikes(start,end))
+  laodProcutLikes : () => dispatch(actions.loadProcutLikes()),
+  loadProcutDiscounts : () => dispatch(actions.loadProcutDiscounts())
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(Home)
+
+
+
 
 
 

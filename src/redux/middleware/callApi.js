@@ -43,21 +43,20 @@ const normalize = (data,schema) => {
     return data;
   }
   let {key,name} = schema;
-  let obj = {
-    items : {},
-    keys : []
-  }
+  let obj = {};
+  let keys = [];
   if(Array.isArray(data)){
     data.forEach(item => {
-      obj.items[item[key]] = item;
-      obj.keys.push(item[key]);
+      obj[item[key]] = item;
+      keys.push(item[key]);
     })
   }else{
-    obj.items[data[key]] = data;
-    obj.keys.push(data[key]);
+    obj[data[key]] = data;
+    keys.push(data[key]);
   }
   return {
-    [name] : obj
+    [name] : obj,
+    keys : keys
   }
 }
 
