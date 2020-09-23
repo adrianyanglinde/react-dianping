@@ -36,7 +36,7 @@ const likes = (state = initialState.likes, { type , error,response}) => {
     case types.FETCH_PRODUCT_LIKES_SUCCESS:
       return {
         ...state,
-        keys : state.keys.concat(response.keys),
+        keys : [...state.keys,...response.keys],
         page : state.page + 1,
         loading : false
       };

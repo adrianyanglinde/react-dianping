@@ -26,17 +26,17 @@ const initialState = {
 
 const product = (state = initialState.product, { type , error,response}) => {
   switch (type) {
-    case types.FETCH_PRODUCT_LIKES_REQUEST:
+    case types.FETCH_PRODUCT_DETAIL_REQUEST:
       return {
         ...state,
         loading : true
       };
-    case types.FETCH_PRODUCT_LIKES_SUCCESS:
+    case types.FETCH_PRODUCT_DETAIL_SUCCESS:
       return {
         ...state,
         loading : false
       };
-    case types.FETCH_PRODUCT_LIKES_FAILURE:
+    case types.FETCH_PRODUCT_DETAIL_FAILURE:
       return {
         ...state,
         loading : false
@@ -112,7 +112,7 @@ export const actions = {
         types.FETCH_SHOP_DETAIL_SUCCESS,
         types.FETCH_SHOP_DETAIL_FAILURE,
       ],
-      callApi : () => request.get(`${API.GET_PRODUCT_DETAIL}${id}.json`),
+      callApi : () => request.get(`${API.GET_SHOP_DETAIL}${id}.json`),
       payload : {},
       schema : shopsSchema
     }
@@ -122,7 +122,7 @@ export const actions = {
 
 //selector
 export const getProductDetail = (state,productId) => {
-  return getProduct(state,productId)
+  return getProductWithDetail(state,productId)
 }
 
 export const getNearShopDetail = (state,productId) => {
