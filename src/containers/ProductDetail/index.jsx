@@ -19,6 +19,7 @@ export class ProductDetail extends Component {
   }
   
   componentDidMount(){
+    /**切换页面缓存产品详细信息 */
     let {productDetail,nearShopDetail} = this.props;
     if(!productDetail){
       let productId = this.props.match.params.id;
