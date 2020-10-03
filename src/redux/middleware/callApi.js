@@ -30,10 +30,12 @@ const callApiMiddleware = ({dispatch,getState}) => {
         type : successType,
         response
     })))
-    .catch(error => next(Object.assign({},payload,{
+    .catch(error => {
+      console.dir(error);
+      next(Object.assign({},payload,{
         type : failureType,
         error
-    })))
+    }))})
   }
 }
 

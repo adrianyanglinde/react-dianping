@@ -3,11 +3,8 @@ export const schema = {
   name : "products"
 }
 
-const initialState = {
 
-}
-
-export default (state = initialState, { type, response , payload }) => {
+export default (state = {}, { type, response , payload }) => {
   /**判断action有没有相应的属性来做state的更新 */
   if(response && response.products){
     return {...state,...response.products}

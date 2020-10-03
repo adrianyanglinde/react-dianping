@@ -3,6 +3,7 @@ import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
 import Home from '../Home/index';
 import User from '../User/index';
 import Login from '../Login/index';
+import Purchase from '../Purchase/index';
 import Search from '../Search/index';
 import SearchResult from '../SearchResult/index';
 import ProductDetail from '../ProductDetail/index';
@@ -19,6 +20,7 @@ function App() {
           <Route path="/search_result" component={SearchResult}/>
           <Route path="/search" component={Search}/>
           <Route path="/login" component={Login}/>
+          <PrivateRouter path="/purchase/:id" component={Purchase}/>
           <PrivateRouter path="/user" component={User}/>
           <Route path="/" component={Home}/>
         </Switch>

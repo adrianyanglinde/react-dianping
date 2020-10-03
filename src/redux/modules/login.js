@@ -1,16 +1,18 @@
 import { combineReducers } from 'redux';
 import API from '../../utils/api';
 import request from '../../utils/request';
-import { setLocalStorage ,getLocalStorage } from '../../utils/utils';
+import { 
+  setLocalStorage,
+  getLocalStorage,
+  clearAllLocalStorage
+} from '../../utils/utils';
 
 export const types = {
   LOGIN_REQUEST : "LOGIN/LOGIN_REQUEST",
   LOGIN_SUCCESS : "LOGIN/LOGIN_SUCCESS",
   LOGIN_FAILURE : "LOGIN/LOGIN_FAILURE",
 
-  LOGOUT_REQUEST : "LOGIN/LOGOUT_REQUEST",
   LOGOUT_SUCCESS : "LOGIN/LOGOUT_SUCCESS",
-  LOGOUT_FAILURE : "LOGIN/LOGOUT_FAILURE",
 
   SET_USERNAME : "LOGIN/SET_USERNAME",
   SET_PASSWORD : "LOGIN/SET_PASSWORD",
@@ -50,6 +52,17 @@ export const actions = {
   loginFailure(){
     return {
       type : types.LOGIN_FAILURE
+    }
+  },
+  logoutSuccess(){
+    return {
+      type : types.LOGOUT_SUCCESS
+    }
+  },
+  logout(){
+    return (dispatch,getState) => {
+      dispatch(actions.logoutSuccess());
+      clearAllLocalStorage();
     }
   },
   login(username,password){
@@ -94,6 +107,13 @@ const login = (state = initialState, {
         ...state,
         loading : false,
         isLogin : true
+      };
+    case types.LOGOUT_SUCCESS:
+      return {
+        ...state,
+        isLogin : false,
+        username : "",
+        password : ""
       };
     case types.LOGIN_FAILURE:
       return {

@@ -1,15 +1,39 @@
 import React, { Component } from 'react';
-import LoginHeader from "./components/LoginHeader"
-import LoginForm from "./components/LoginForm"
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import UserMain from "./container/UserMain"
+import UserHeader from "./components/UserHeader"
+import { 
+  actions as loginActions
+} from '../../redux/modules/login'
 
 class User extends Component {
   render() {
     return (
       <div>
-        个人中心
+        <UserHeader 
+          onBack={this.handleBack} 
+          onLogout={this.handleLogout}
+        />
+        <UserMain/>
       </div>
     );
   }
+
+  handleBack = () => {
+    this.props.history.goBack();
+  }
+
+  handleLogout = () => {
+    this.props.loginActions.logout();
+  }
 }
 
-export default User;
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    loginActions : bindActionCreators(loginActions,dispatch)
+  }
+}
+
+export default connect(null, mapDispatchToProps)(User)
