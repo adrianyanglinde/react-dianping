@@ -9,6 +9,7 @@ export const REFUND_ORDER_TYPE = 4;
 
 
 export const types = {
+  ADD_ORDER : "ORDERS/ADD_ORDER",
   DELETE_ORDER : "ORDERS/DELETE_ORDER",
   ADD_ORDER_COMMENT : "ORDERS/DELETE_ORDER_COMMENT"
 }
@@ -17,6 +18,10 @@ export const actions = {
   deleteOrder : (key) => ({
     type : types.DELETE_ORDER,
     key
+  }),
+  addOrder : (order) => ({
+    type : types.ADD_ORDER,
+    order
   }),
   addOrderComment : (orderId,commentId) => ({
     type : types.ADD_ORDER_COMMENT,
@@ -30,7 +35,8 @@ export default (state = {}, {
   response , 
   key , 
   commentId,
-  orderId
+  orderId,
+  order
 }) => {
   if(response && response.orders){
     return {...state,...response.orders}
@@ -41,6 +47,9 @@ export default (state = {}, {
       ...restOrder
     } = state;
     return {...restOrder}
+  }
+  if(type === types.ADD_ORDER){
+    return {...state,[order.id] : order}
   }
   if(type === types.ADD_ORDER_COMMENT){
     let comments = state[orderId].comments;
@@ -61,5 +70,9 @@ export default (state = {}, {
 
 export const getOrder = (state,key) => {
   return state.entities.orders[key];
+}
+
+export const getAllOrder = (state) => {
+  return state.entities.orders;
 }
 

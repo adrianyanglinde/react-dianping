@@ -1,17 +1,20 @@
 import { combineReducers } from 'redux';
+import { createSelector } from "reselect";
 import API from '../../utils/api';
 import request from '../../utils/request';
 import {
   schema as ordersSchema,
   actions as orderActions,
   types as orderTypes,
-  getOrder,
+  getAllOrder,
+  
   TOPAY_ORDER_TYPE,
   AVAILABLE_ORDER_TYPE,
   REFUND_ORDER_TYPE
 } from './orders';
 import {
-  actions as commentActions, getComment,
+  actions as commentActions,
+  getAllComment
 } from './comments';
 
 
@@ -35,12 +38,19 @@ export const types = {
   CHANGE_ORDER_COMMENT_STAR : "USER/CHANGE_ORDER_COMMENT_STAR",
   SUBMIT_ORDER_COMMENT_REQUEST : "USER/SUBMIT_ORDER_COMMENT_REQUEST",
   SUBMIT_ORDER_COMMENT_SUCCESS : "USER/SUBMIT_ORDER_COMMENT_SUCCESS",
-  SUBMIT_ORDER_COMMENT_FAILURE : "USER/SUBMIT_ORDER_COMMENT_FAILURE"
+  SUBMIT_ORDER_COMMENT_FAILURE : "USER/SUBMIT_ORDER_COMMENT_FAILURE",
+
+  ADD_ORDER : "USER/ADD_ORDER",
 }
 
 const initialState = {
   orders : {
     loading : false,
+    /**
+     * 发现现有状态已不满足，
+     * 新增订单数组不为空，所以不能根据数组长度来判断是否有获取过数据
+     */
+    fetched : false,
     keys : [],
     toPayKeys : [],
     availableKeys : [],
@@ -66,9 +76,13 @@ export const actions = {
     type : types.CHANGE_CURRENT_TAB,
     index
   }),
+  addOrder : (orderId) => ({
+    type : types.ADD_ORDER,
+    orderId
+  }),
   loadOrders : () => {
     return (dispatch,getState) => {
-      if(getState().user.orders.keys.length > 0){
+      if(getState().user.orders.fetched){
         return null;
       }
       return dispatch(actions.fetchOrders())
@@ -135,7 +149,7 @@ export const actions = {
   submitOrderCommentRequest : () => ({
     type : types.SUBMIT_ORDER_COMMENT_REQUEST,
   }),
-  submitOrderCommentSuccess : orderId => ({
+  submitOrderCommentSuccess : () => ({
     type : types.SUBMIT_ORDER_COMMENT_SUCCESS,
   }),
   submitOrderCommentFailure : () => ({
@@ -195,14 +209,21 @@ const orders = (state = initialState.orders, {
     case types.FETCH_ORDERS_SUCCESS:
       return {
         ...state,
-        keys : response.keys,
-        toPayKeys : getOrdersByType(response,TOPAY_ORDER_TYPE),
-        availableKeys : getOrdersByType(response,AVAILABLE_ORDER_TYPE),
-        refundKeys : getOrdersByType(response,REFUND_ORDER_TYPE),
-        loading : false
+        keys : [...state.keys,...response.keys],
+        toPayKeys : [...state.toPayKeys,...getOrdersByType(response,TOPAY_ORDER_TYPE)],
+        availableKeys : [...state.availableKeys,...getOrdersByType(response,AVAILABLE_ORDER_TYPE)],
+        refundKeys : [...state.refundKeys,...getOrdersByType(response,REFUND_ORDER_TYPE)],
+        loading : false,
+        fetched : true
       };
     case types.FETCH_ORDERS_FAILURE:
       return {...state,loading : false};
+    case types.ADD_ORDER:
+      return {
+        ...state,
+        keys : [...state.keys,orderId],
+        availableKeys : [...state.availableKeys,orderId]
+      };
     default:
       return state;
   }
@@ -274,24 +295,36 @@ export const getCurrentTab = (state) => {
   return state.user.currentTab;
 }
 
-export const getCurrentOrders = (state) => {
+export const getUserOrders = (state) => {
+  return state.user.orders;
+}
+
+/**
+ * reSelect 减少无关状态变更的select计算
+ */
+export const getCurrentOrders = createSelector([
+  getCurrentTab,
+  getUserOrders,
+  getAllOrder,
+  getAllComment,
+],(currentTab,userOrders,orders,comments)=>{
   const type = [
     'keys',
     'toPayKeys',
     'availableKeys',
     'refundKeys'
-  ][state.user.currentTab];
-  return state.user.orders[type].map(key => {
-    let order = getOrder(state,key);
-    let comments = order.comments ? order.comments.map(commentId => {
-      return getComment(state,commentId);
+  ][currentTab];
+  return userOrders[type].map(orderId => {
+    let order = orders[orderId];
+    let orderComments = order.comments ? order.comments.map(commentId => {
+      return comments[commentId];
     }) : []
     return {
       ...order,
-      comments : comments
+      comments : orderComments
     };
   })
-}
+})
 
 export const getIsShowDeleteOrderModal = (state) => {
   return state.user.deleteOrder.showModal;

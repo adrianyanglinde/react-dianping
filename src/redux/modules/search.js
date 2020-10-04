@@ -1,8 +1,16 @@
 import { combineReducers } from 'redux';
+import { createSelector } from "reselect";
 import API from '../../utils/api';
 import request from '../../utils/request';
-import {schema as keywordsSchema,getKeyword} from './keywords';
-import {schema as shopsSchema,getShop} from './shops';
+import {
+  schema as keywordsSchema,
+  getKeyword,
+  getAllKeyword
+} from './keywords';
+import {
+  schema as shopsSchema,
+  getAllShop
+} from './shops';
 
 
 export const types = {
@@ -46,24 +54,18 @@ const initialState = {
  * handle仅作为响应事件的动作
  */
 export const actions = {
-  changeInputText(text){
-    return {
-      type : types.CHANGE_INPUT_TEXT,
-      text
-    }
-  },
-  setHistoryKeyword(keyword){
-    return {
-      type : types.SET_HISTORY_KEYWORD,
-      keyword
-    }
-  },
-  clearHistoryKeywords(){
-    return {
-      type : types.CLEAR_HISTORY_KEYWORDS
-    }
-  },
-  loadRelatedKeywords(keyword){
+  changeInputText : (text) => ({
+    type : types.CHANGE_INPUT_TEXT,
+    text
+  }),
+  setHistoryKeyword : (keyword) => ({
+    type : types.SET_HISTORY_KEYWORD,
+    keyword
+  }),
+  clearHistoryKeywords : () => ({
+    type : types.CLEAR_HISTORY_KEYWORDS,
+  }),
+  loadRelatedKeywords : (keyword) => {
     return (dispatch,getState) => {
       if(getState().search.relatedKeywords.keys[keyword]){
         return null;
@@ -71,7 +73,7 @@ export const actions = {
       return dispatch(actions.fetchRelatedKeywords(keyword))
     }
   },
-  fetchRelatedKeywords(keyword){
+  fetchRelatedKeywords : (keyword) => {
     return {
       types : [
         types.FETCH_RELATED_KEYWORDS_REQUEST,
@@ -83,7 +85,7 @@ export const actions = {
       schema : keywordsSchema
     }
   },
-  loadPopularKeywords(){
+  loadPopularKeywords : () => {
     return (dispatch,getState) => {
       if(getState().search.popularKeywords.keys.length > 0){
         return null;
@@ -91,7 +93,7 @@ export const actions = {
       return dispatch(actions.fetchPopularKeywords())
     }
   },
-  fetchPopularKeywords(){
+  fetchPopularKeywords : () => {
     return {
       types : [
         types.FETCH_POPULAR_KEYWORDS_REQUEST,
@@ -103,7 +105,7 @@ export const actions = {
       schema : keywordsSchema
     }
   },
-  loadShopsByKeyword(keyword){
+  loadShopsByKeyword : (keyword) => {
     return (dispatch,getState) => {
       if(getState().search.shopsByKeyword.keys[keyword]){
         return null;
@@ -111,7 +113,7 @@ export const actions = {
       return dispatch(actions.fetchShopsByKeyword(keyword))
     }
   },
-  fetchShopsByKeyword(keyword){
+  fetchShopsByKeyword : (keyword) => {
     return {
       types : [
         types.FETCH_SHOPS_BY_KEYWORD_REQUEST,
@@ -134,10 +136,7 @@ const relatedKeywords = (state = initialState.relatedKeywords, {
 }) => {
   switch (type) {
     case types.FETCH_RELATED_KEYWORDS_REQUEST:
-      return {
-        ...state,
-        loading : true
-      };
+      return {...state,loading : true};
     case types.FETCH_RELATED_KEYWORDS_SUCCESS:
       return {
         ...state,
@@ -148,10 +147,7 @@ const relatedKeywords = (state = initialState.relatedKeywords, {
         loading : false
       };
     case types.FETCH_RELATED_KEYWORDS_FAILURE:
-      return {
-        ...state,
-        loading : false
-      };
+      return {...state,loading : false};
     default:
       return state;
   }
@@ -164,21 +160,12 @@ const popularKeywords = (state = initialState.popularKeywords, {
 }) => {
   switch (type) {
     case types.FETCH_POPULAR_KEYWORDS_REQUEST:
-      return {
-        ...state,
-        loading : true
+      return {...state,loading : true
       };
     case types.FETCH_POPULAR_KEYWORDS_SUCCESS:
-      return {
-        ...state,
-        keys : response.keys,
-        loading : false
-      };
+      return {...state,keys : response.keys,loading : false};
     case types.FETCH_POPULAR_KEYWORDS_FAILURE:
-      return {
-        ...state,
-        loading : false
-      };
+      return {...state,loading : false};
     default:
       return state;
   }
@@ -219,10 +206,7 @@ const shopsByKeyword = (state = initialState.shopsByKeyword, {
 }) => {
   switch (type) {
     case types.FETCH_SHOPS_BY_KEYWORD_REQUEST:
-      return {
-        ...state,
-        loading : true
-      };
+      return {...state,loading : true};
     case types.FETCH_SHOPS_BY_KEYWORD_SUCCESS:
       return {
         ...state,
@@ -233,10 +217,7 @@ const shopsByKeyword = (state = initialState.shopsByKeyword, {
         loading : false
       };
     case types.FETCH_SHOPS_BY_KEYWORD_FAILURE:
-      return {
-        ...state,
-        loading : false
-      };
+      return {...state,loading : false};
     default:
       return state;
   }
@@ -256,49 +237,85 @@ export const getInputText = (state) => {
   return state.search.inputText
 }
 
-export const getRelatedKeywords = (state) => {
-  let text = getInputText(state);
-  let related = state.search.relatedKeywords.keys[text];
-  if(!related){
-    return [];
+export const getRelatedKeywordsIdsByText = (state) => {
+  return state.search.relatedKeywords.keys;
+}
+
+export const getRelatedKeywords = createSelector(
+  [
+    getRelatedKeywordsIdsByText,
+    getAllKeyword,
+    getInputText
+  ],(relatedKeywordsIdsByText,keywords,text) => {
+    const relatedKeywordsIds = relatedKeywordsIdsByText[text];
+    if(!relatedKeywordsIds){
+      return [];
+    }
+    return relatedKeywordsIds.map(keywordId => {
+      return keywords[keywordId]
+    })
   }
-  return related.map(key => {
-    return getKeyword(state,key)
-  })
+)
+
+export const getPopularKeywordsIds = (state) => {
+  return state.search.popularKeywords.keys;
 }
 
-export const getPopularKeywords = (state) => {
-  return state.search.popularKeywords.keys.map(key => {
-    return getKeyword(state,key)
-  })
-}
-
-export const getHistoryKeywords = (state) => {
-  return state.search.historyKeywords.map(key => {
-    return getKeyword(state,key)
-  })
-}
-
-export const getShopsByKeyword = (state) => {
-  let key = state.search.historyKeywords[0];
-  let shops = state.search.shopsByKeyword.keys[key];
-  if(!shops){
-    return []
+export const getPopularKeywords = createSelector(
+  [
+    getPopularKeywordsIds,
+    getAllKeyword,
+  ],(popularKeywordsIds,keywords) => {
+    return popularKeywordsIds.map(keywordId => {
+      return keywords[keywordId]
+    })
   }
-  return shops.map(key => {
-    return getShop(state,key)
-  })
+)
+
+export const getHistoryKeywordsIds = (state) => {
+  return state.search.historyKeywords;
 }
+
+export const getHistoryKeywords = createSelector(
+  [
+    getHistoryKeywordsIds,
+    getAllKeyword,
+  ],(historyKeywordsIds,keywords) => {
+    return historyKeywordsIds.map(keywordId => {
+      return keywords[keywordId]
+    })
+  }
+)
+
+export const getLatestKeywordId = (state) => {
+  return state.search.historyKeywords[0];
+}
+
+export const getShopIdsByKeywordIds = (state) => {
+  return state.search.shopsByKeyword.keys;
+}
+
+export const getShopsByKeyword = createSelector(
+  [
+    getLatestKeywordId,
+    getShopIdsByKeywordIds,
+    getAllShop
+  ],(keywordId,shopIdsByKeywordIds,shops) => {
+    const shopIds = shopIdsByKeywordIds[keywordId];
+    if(!shopIds){
+      return []
+    }
+    return shopIds.map(shopId => {
+      return shops[shopId]
+    })
+  }
+)
 
 export const getCurrentKeyword = (state) => {
-  let key = state.search.historyKeywords[0];
-  if(!key){
+  const keywordId = getLatestKeywordId(state);
+  if(!keywordId){
     return "";
   }
-  return getKeyword(state,key).keyword
+  return getKeyword(state,keywordId).keyword
 }
 
-/**
- * byId 命名
- * 用ID key?
- */

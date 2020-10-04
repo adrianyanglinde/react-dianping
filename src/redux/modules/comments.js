@@ -38,3 +38,7 @@ export const getComment = (state,key) => {
   return state.entities.comments[key];
 }
 
+export const getAllComment = (state) => {
+  return state.entities.comments;
+}
+

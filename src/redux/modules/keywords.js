@@ -3,19 +3,17 @@ export const schema = {
   name : "keywords"
 }
 
-const initialState = {
-
-}
-
-export default (state = initialState, { type, response , payload }) => {
+export default (state = {}, { type, response , payload }) => {
   if(response && response.keywords){
     return {...state,...response.keywords}
   }
   return state;
 }
 
-
-/**selector */
 export const getKeyword = (state,key) => {
   return state.entities.keywords[key];
+}
+
+export const getAllKeyword = (state) => {
+  return state.entities.keywords;
 }

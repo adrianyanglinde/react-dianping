@@ -1,15 +1,18 @@
 import { combineReducers } from 'redux';
+import { createSelector } from "reselect";
 import API from '../../utils/api';
 import request from '../../utils/request';
 import {
-  schema as ordersSchema,
+  actions as userActions
+} from './user';
+import {
   actions as orderActions,
-  types as orderTypes,
-  getOrder,
-  TOPAY_ORDER_TYPE,
-  AVAILABLE_ORDER_TYPE,
-  REFUND_ORDER_TYPE
+  AVAILABLE_ORDER_TYPE
 } from './orders';
+import {
+  getProductWithDetail,
+  getProduct
+} from './products';
 
 
 export const types = {
@@ -19,14 +22,14 @@ export const types = {
 
   CHANGE_QUANTITY : "PERCHASE/CHANGE_QUANTITY",
 
-  SHOW_CONFIRM_MODALD : "PERCHASE/SHOW_CONFIRM_MODALD",
-  HIDE_CONFIRM_MODALD : "PERCHASE/HIDE_CONFIRM_MODALD",
+  SHOW_SUCCESS_MODALD : "PERCHASE/SHOW_SUCCESS_MODALD",
+  HIDE_SUCCESS_MODALD : "PERCHASE/HIDE_SUCCESS_MODALD",
 }
 
 const initialState = {
   loading : false,
   quantity : 0,
-  showConfirmModal : false
+  showSuccessModal : false
 }
 
 
@@ -35,11 +38,11 @@ export const actions = {
     type : types.CHANGE_QUANTITY,
     quantity
   }),
-  showConfirmModal : () => ({
-    type : types.SHOW_CONFIRM_MODALD,
+  showSuccessModal : () => ({
+    type : types.SHOW_SUCCESS_MODALD,
   }),
   hideConfirmModal : () => ({
-    type : types.HIDE_CONFIRM_MODALD,
+    type : types.HIDE_SUCCESS_MODALD,
   }),
   perchaseRequest : () => ({
     type : types.PERCHASE_REQUEST,
@@ -50,16 +53,36 @@ export const actions = {
   perchaseFailure : () => ({
     type : types.PERCHASE_FAILURE
   }),
-  perchase(productObj){
-    const {productId} = productObj;
+  perchase(productId){
     return (dispatch,getState) => {
       if(!productId){
         return null;
       }
+      const quantity = getQuantity(getState());
+      const params = {
+        productId,
+        quantity
+      }
       dispatch(actions.perchaseRequest())
-      return request.get(`${API.PERCHACE_PRODUCT}?productInfo=${JSON.stringify(productObj)}`).then(()=>{
-        dispatch(actions.hideConfirmModal())
+      return request.get(`${API.PERCHACE_PRODUCT}?params=${JSON.stringify(params)}`).then(()=>{
+        dispatch(actions.showSuccessModal())
         dispatch(actions.perchaseSuccess())
+        const orderId = `o-${(new Date()).getTime()}`;
+        const product = getProduct(getState(),productId)
+        const totalPrice = (product.currentPrice * quantity).toFixed(1);
+        const text1 = `${quantity}张 | 总价：${totalPrice}`;
+        const text2 = product.validityPeriod;
+        const order = {
+          id: orderId,
+          title: `${product.shop}:${product.product}`,
+          orderPicUrl: product.picture,
+          channel: "团购",
+          statusText: "待消费",
+          text: [text1, text2],
+          type: AVAILABLE_ORDER_TYPE
+        };
+        dispatch(orderActions.addOrder(order))
+        dispatch(userActions.addOrder(orderId))
       }).catch(()=>{
         dispatch(actions.perchaseFailure())
       })
@@ -72,14 +95,14 @@ const perchase = (state = initialState, {
   quantity
 }) => {
   switch (type) {
-    case types.SHOW_CONFIRM_MODALD:
-      return {...state,showConfirmModal : true};
-    case types.HIDE_CONFIRM_MODALD:
-      return {...state,showConfirmModal : false};
+    case types.SHOW_SUCCESS_MODALD:
+      return {...state,showSuccessModal : true};
+    case types.HIDE_SUCCESS_MODALD:
+      return {...state,showSuccessModal : false};
     case types.CHANGE_QUANTITY:
       return {...state,quantity};
     case types.PERCHASE_REQUEST:
-      return {...state,loading : true,showConfirmModal : false};
+      return {...state,loading : true};
     case types.PERCHASE_SUCCESS:
       return {...state,quantity : 0,loading : false};
     case types.PERCHASE_FAILURE:
@@ -92,27 +115,26 @@ const perchase = (state = initialState, {
 export default perchase
 
 
-
-export const getCurrentTab = (state) => {
-  return state.user.currentTab;
+export const getQuantity = (state) => {
+  return state.perchase.quantity;
 }
 
-export const getIsShowDeleteOrderModal = (state) => {
-  return state.user.deleteOrder.showModal;
+export const isShowSuccessModal = (state) => {
+  return state.perchase.showSuccessModal;
 }
 
-export const getCurrentOrderCommentOrderId = (state) => {
-  return state.user.commentOrder.orderId
-}
-
-export const getCurrentOrderCommentText = (state) => {
-  return state.user.commentOrder.text;
-}
-
-export const getCurrentOrderCommentStar = (state) => {
-  return state.user.commentOrder.star;
-}
-
+export const getTotalPrice = createSelector(
+  [
+    getQuantity,
+    getProductWithDetail
+  ],
+  (quantity,product)=>{
+    if(!product){
+      return 0;
+    }
+    return (quantity * product.currentPrice).toFixed(1);
+  }
+)
 
 
 
