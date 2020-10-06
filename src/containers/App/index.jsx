@@ -1,15 +1,16 @@
 import React from 'react';
 import {BrowserRouter as Router, Route, Switch} from 'react-router-dom';
-import Home from '../Home/index';
-import User from '../User/index';
-import Login from '../Login/index';
-import Purchase from '../Purchase/index';
-import Search from '../Search/index';
-import SearchResult from '../SearchResult/index';
-import ProductDetail from '../ProductDetail/index';
+import asyncComponent from '../../utils/asyncComponent';
 import PrivateRouter from '../PrivateRouter/index';
 import './style.scss';
 
+const Home = asyncComponent(() => import('../Home/index'));
+const User = asyncComponent(() => import('../User/index'));
+const Login = asyncComponent(() => import('../Login/index'));
+const Purchase = asyncComponent(() => import('../Purchase/index'));
+const Search = asyncComponent(() => import('../Search/index'));
+const SearchResult = asyncComponent(() => import('../SearchResult/index'));
+const ProductDetail = asyncComponent(() => import('../ProductDetail/index'));
 
 function App() {
   return (
