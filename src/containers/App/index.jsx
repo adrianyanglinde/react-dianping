@@ -15,7 +15,7 @@ const ProductDetail = asyncComponent(() => import('../ProductDetail/index'));
 function App() {
   return (
     <div className="App">
-      <Router>
+      <Router basename="/dianping">
         <Switch>
           <Route path="/detail/:id" component={ProductDetail}/>
           <Route path="/search_result" component={SearchResult}/>
